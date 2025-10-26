@@ -15,5 +15,21 @@ fn handler(req: Request) -> Response {
         );
     }
 
+    const SEC_FETCH_SITE: &str = "sec-fetch-site";
+    const SAME_ORIGIN: &str = "same-origin";
+    const NONE: &str = "none";
+
+    let csrf = req.headers().get_all(SEC_FETCH_SITE);
+
+    if csrf.iter().ne([SAME_ORIGIN]) && csrf.iter().ne([NONE]) {
+        return text_response(
+            403,
+            format!(
+                "\"{}\" header value is none of: {}, {}\r\nEither the browser doesn't support it or this is a CSRF attack.\r\nRefusing operation!\r\n",
+                SEC_FETCH_SITE, SAME_ORIGIN, NONE
+            ),
+        );
+    }
+
     empty_response(501)
 }
