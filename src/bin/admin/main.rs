@@ -1,4 +1,5 @@
-use cgi::{Request, Response, empty_response, handle, http::header, text_response};
+use cgi::http::{Method, header};
+use cgi::{Request, Response, handle, html_response, text_response};
 
 fn main() {
     handle(handler);
@@ -31,5 +32,11 @@ fn handler(req: Request) -> Response {
         );
     }
 
-    empty_response(501)
+    match req.uri().query() {
+        None => match req.method() {
+            &Method::GET => html_response(200, include_str!("index.html")),
+            _ => text_response(405, "Request method must be GET.\r\n"),
+        },
+        Some(_) => text_response(404, "No such action.\r\n"),
+    }
 }
