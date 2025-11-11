@@ -1,3 +1,5 @@
+mod import_memopzk;
+
 use cgi::http::{Method, header};
 use cgi::{Request, Response, handle, html_response, text_response};
 
@@ -36,6 +38,11 @@ fn handler(req: Request) -> Response {
         None => match req.method() {
             &Method::GET => html_response(200, include_str!("index.html")),
             _ => text_response(405, "Request method must be GET.\r\n"),
+        },
+        Some("import-memopzk") => match req.method() {
+            &Method::GET => html_response(200, include_str!("import-memopzk.html")),
+            &Method::POST => import_memopzk::handler(req),
+            _ => text_response(405, "Request method must be GET or POST.\r\n"),
         },
         Some(_) => text_response(404, "No such action.\r\n"),
     }
