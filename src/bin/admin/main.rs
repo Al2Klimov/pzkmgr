@@ -1,7 +1,22 @@
+mod hex_fmt;
 mod import_memopzk;
 
 use cgi::http::{Method, header};
 use cgi::{Request, Response, handle, html_response, text_response};
+use sqlite;
+use std::env::var_os;
+
+#[macro_export]
+macro_rules! http500_unless {
+    ($errmsg:expr, $result:expr) => {
+        match $result {
+            Ok(v) => v,
+            Err(err) => {
+                return text_response(500, format!("{}: {}\r\n", $errmsg, err));
+            }
+        }
+    };
+}
 
 fn main() {
     handle(handler);
@@ -34,6 +49,25 @@ fn handler(req: Request) -> Response {
         );
     }
 
+    const PZKMGR_DB: &str = "PZKMGR_DB";
+
+    let mut db = match var_os(PZKMGR_DB) {
+        None => {
+            return text_response(500, format!("Env var \"{}\" missing.\r\n", PZKMGR_DB));
+        }
+        Some(path) => http500_unless!("Failed to open database", sqlite::open(path)),
+    };
+
+    http500_unless!(
+        "Failed to set database lock timeout",
+        db.set_busy_timeout(4096)
+    );
+
+    http500_unless!(
+        "Failed to enforce foreign keys",
+        db.execute("PRAGMA foreign_keys = ON")
+    );
+
     match req.uri().query() {
         None => match req.method() {
             &Method::GET => html_response(200, include_str!("index.html")),
@@ -41,7 +75,7 @@ fn handler(req: Request) -> Response {
         },
         Some("import-memopzk") => match req.method() {
             &Method::GET => html_response(200, include_str!("import-memopzk.html")),
-            &Method::POST => import_memopzk::handler(req),
+            &Method::POST => import_memopzk::handler(db, req),
             _ => text_response(405, "Request method must be GET or POST.\r\n"),
         },
         Some(_) => text_response(404, "No such action.\r\n"),

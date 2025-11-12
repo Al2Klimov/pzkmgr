@@ -1,9 +1,11 @@
+use crate::{hex_fmt::HexFmt, http500_unless};
 use cgi::{Request, Response, http::header, text_response};
 use csv::ReaderBuilder;
 use multipart::server::Multipart;
-use std::io::Cursor;
+use sqlite::Connection;
+use std::{io::Cursor, time};
 
-pub(crate) fn handler(req: Request) -> Response {
+pub(crate) fn handler(db: Connection, req: Request) -> Response {
     const BOUNDARY: &str = "boundary=";
 
     let oboundary = match req.headers().get("X-CGI-Content-Type") {
@@ -59,6 +61,22 @@ pub(crate) fn handler(req: Request) -> Response {
                     Ok(None) => return text_response(400, "CSV missing.\r\n"),
                     Ok(Some(entry)) => match entry.headers.name.as_ref() {
                         "csv" => {
+                            http500_unless!(
+                                "Failed to init database",
+                                db.execute(include_str!("schema.sql"))
+                            );
+
+                            http500_unless!(
+                                "Failed to init transaction",
+                                db.execute("BEGIN IMMEDIATE")
+                            );
+
+                            let snapshot_time = http500_unless!(
+                                "Failed to travel in time",
+                                time::SystemTime::now().duration_since(time::UNIX_EPOCH)
+                            )
+                            .as_secs();
+
                             for i in ReaderBuilder::new()
                                 .delimiter(b';')
                                 .from_reader(entry.data)
@@ -73,12 +91,27 @@ pub(crate) fn handler(req: Request) -> Response {
                                     }
                                     Ok(row) => match row.get(0) {
                                         None => {}
-                                        Some(name) => eprintln!("Name: '{}'", name),
+                                        Some(name) => {
+                                            let hex_name = HexFmt::new(name.as_bytes());
+
+                                            http500_unless!(
+                                                "Failed to INSERT INTO person",
+                                                db.execute(format!("INSERT OR IGNORE INTO person(name) VALUES (unhex('{}'))", hex_name))
+                                            );
+
+                                            http500_unless!(
+                                                "Failed to INSERT INTO pzk",
+                                                // Duplicate name in input => same person_id twice => INSERT OR IGNORE
+                                                db.execute(format!("INSERT OR IGNORE INTO pzk VALUES ({}, (SELECT id FROM person WHERE name = unhex('{}')))", snapshot_time, hex_name))
+                                            );
+                                        }
                                     },
                                 }
                             }
 
-                            todo!();
+                            http500_unless!("Failed to commit transaction", db.execute("COMMIT"));
+
+                            return text_response(200, "Success.\r\n");
                         }
                         _ => {}
                     },
