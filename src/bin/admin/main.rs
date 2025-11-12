@@ -1,5 +1,6 @@
 mod hex_fmt;
 mod import_memopzk;
+mod import_vcard;
 mod util;
 
 use cgi::http::{Method, header};
@@ -65,6 +66,11 @@ fn handler(req: Request) -> Response {
         Some("import-memopzk") => match req.method() {
             &Method::GET => html_response(200, include_str!("import-memopzk.html")),
             &Method::POST => util::handle_upload(db, req, import_memopzk::handler),
+            _ => text_response(405, "Request method must be GET or POST.\r\n"),
+        },
+        Some("import-vcard") => match req.method() {
+            &Method::GET => html_response(200, include_str!("import-vcard.html")),
+            &Method::POST => util::handle_upload(db, req, import_vcard::handler),
             _ => text_response(405, "Request method must be GET or POST.\r\n"),
         },
         Some(_) => text_response(404, "No such action.\r\n"),
