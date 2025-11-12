@@ -1,22 +1,11 @@
 mod hex_fmt;
 mod import_memopzk;
+mod util;
 
 use cgi::http::{Method, header};
 use cgi::{Request, Response, handle, html_response, text_response};
 use sqlite;
 use std::env::var_os;
-
-#[macro_export]
-macro_rules! http500_unless {
-    ($errmsg:expr, $result:expr) => {
-        match $result {
-            Ok(v) => v,
-            Err(err) => {
-                return text_response(500, format!("{}: {}\r\n", $errmsg, err));
-            }
-        }
-    };
-}
 
 fn main() {
     handle(handler);
@@ -75,7 +64,7 @@ fn handler(req: Request) -> Response {
         },
         Some("import-memopzk") => match req.method() {
             &Method::GET => html_response(200, include_str!("import-memopzk.html")),
-            &Method::POST => import_memopzk::handler(db, req),
+            &Method::POST => util::handle_upload(db, req, import_memopzk::handler),
             _ => text_response(405, "Request method must be GET or POST.\r\n"),
         },
         Some(_) => text_response(404, "No such action.\r\n"),
