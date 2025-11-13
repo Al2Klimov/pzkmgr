@@ -86,11 +86,14 @@ fn contact_prop(contact: &mut impl Component, prop: &'static str) -> Option<Stri
 }
 
 fn parse<'a>(cap: &Captures<'a>, i: usize) -> NullIntFmt {
-    NullIntFmt::new(match cap.get(i) {
-        None => None,
-        Some(m) => match m.as_str().parse::<i64>() {
-            Err(_) => None,
-            Ok(x) => Some(x),
+    NullIntFmt::new(
+        match cap.get(i) {
+            None => None,
+            Some(m) => match m.as_str().parse::<i64>() {
+                Err(_) => None,
+                Ok(x) => Some(x),
+            },
         },
-    })
+        "NULL",
+    )
 }

@@ -1,6 +1,9 @@
+#![recursion_limit = "512"]
+
 mod hex_fmt;
 mod import_memopzk;
 mod import_vcard;
+mod list_current;
 mod nullint_fmt;
 mod util;
 
@@ -73,6 +76,10 @@ fn handler(req: Request) -> Response {
             &Method::GET => html_response(200, include_str!("import-vcard.html")),
             &Method::POST => util::handle_upload(db, req, import_vcard::handler),
             _ => text_response(405, "Request method must be GET or POST.\r\n"),
+        },
+        Some("list-current") => match req.method() {
+            &Method::GET => list_current::handler(db, req),
+            _ => text_response(405, "Request method must be GET.\r\n"),
         },
         Some(_) => text_response(404, "No such action.\r\n"),
     }
