@@ -1,6 +1,6 @@
-use crate::{http500_unless, nullint_fmt::NullIntFmt};
+use crate::http500_unless;
 use cgi::{Request, Response, html_response, text_response};
-use html::{root::Html, tables::Table};
+use html::{forms::builders::FormBuilder, root::Html, tables::Table};
 use sqlite::Connection;
 
 pub(crate) fn handler(db: Connection, _: Request) -> Response {
@@ -27,6 +27,7 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
 
     for i in query {
         let row = http500_unless!("Failed to fetch row", i);
+        let id = read_col!(row, "id", i64).to_string();
         let name = read_col!(row, "name", &str).to_string();
         let birth_year = read_col!(row, "birth_year", Option<i64>);
         let birth_month = read_col!(row, "birth_month", Option<i64>);
@@ -34,12 +35,18 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
 
         table.table_row(|tr| {
             tr.table_cell(|td| td.text(name)).table_cell(|td| {
-                td.text(format!(
-                    "{}-{}-{}",
-                    NullIntFmt::new(birth_year, "?"),
-                    NullIntFmt::new(birth_month, "?"),
-                    NullIntFmt::new(birth_day, "?")
-                ))
+                td.form(|form| {
+                    form.target("_blank")
+                        .action("?change-birthday")
+                        .method("POST")
+                        .input(|input| input.name("id").type_("hidden").value(id));
+
+                    number_input(form, "year", "1000", "9999", birth_year);
+                    number_input(form, "month", "1", "12", birth_month);
+                    number_input(form, "day", "1", "31", birth_day);
+
+                    form.input(|input| input.type_("submit").value("Save"))
+                })
             })
         });
     }
@@ -56,4 +63,25 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
             .build()
             .to_string(),
     )
+}
+
+fn number_input(
+    form: &mut FormBuilder,
+    name: &'static str,
+    min: &'static str,
+    max: &'static str,
+    value: Option<i64>,
+) {
+    form.input(|input| {
+        input.name(name).type_("number").min(min).max(max);
+
+        match value {
+            None => {}
+            Some(v) => {
+                input.value(v.to_string());
+            }
+        }
+
+        input
+    });
 }
