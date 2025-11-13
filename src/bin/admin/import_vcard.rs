@@ -35,7 +35,7 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
                     http500_unless!(
                         "Failed to INSERT INTO person",
                         db.execute(format!(
-                            "INSERT OR IGNORE INTO person(name) VALUES (unhex('{}'))",
+                            "INSERT OR IGNORE INTO person(name) VALUES (CAST(unhex('{}') AS TEXT))",
                             hex_name
                         ))
                     );
@@ -53,7 +53,7 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
                                 http500_unless!(
                                     "Failed to UPDATE person",
                                     db.execute(format!(
-                                        "UPDATE person SET birth_year = {}, birth_month = {}, birth_day = {} WHERE name = unhex('{}')",
+                                        "UPDATE person SET birth_year = {}, birth_month = {}, birth_day = {} WHERE name = CAST(unhex('{}') AS TEXT)",
                                         parse(&cap, 1), parse(&cap, 2), parse(&cap, 3), hex_name
                                     ))
                                 );
@@ -63,7 +63,10 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
 
                     http500_unless!(
                         "Failed to INSERT INTO pzk",
-                        db.execute(format!("INSERT INTO pzk VALUES ({}, (SELECT id FROM person WHERE name = unhex('{}')))", snapshot_time, hex_name))
+                        db.execute(format!(
+                            "INSERT OR IGNORE INTO pzk VALUES ({}, (SELECT id FROM person WHERE name = CAST(unhex('{}') AS TEXT)))",
+                            snapshot_time, hex_name
+                        ))
                     );
                 }
             },

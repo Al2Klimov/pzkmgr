@@ -33,7 +33,7 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
                     http500_unless!(
                         "Failed to INSERT INTO person",
                         db.execute(format!(
-                            "INSERT OR IGNORE INTO person(name) VALUES (unhex('{}'))",
+                            "INSERT OR IGNORE INTO person(name) VALUES (CAST(unhex('{}') AS TEXT))",
                             hex_name
                         ))
                     );
@@ -41,7 +41,10 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
                     http500_unless!(
                         "Failed to INSERT INTO pzk",
                         // Duplicate name in input => same person_id twice => INSERT OR IGNORE
-                        db.execute(format!("INSERT OR IGNORE INTO pzk VALUES ({}, (SELECT id FROM person WHERE name = unhex('{}')))", snapshot_time, hex_name))
+                        db.execute(format!(
+                            "INSERT OR IGNORE INTO pzk VALUES ({}, (SELECT id FROM person WHERE name = CAST(unhex('{}') AS TEXT)))",
+                            snapshot_time, hex_name
+                        ))
                     );
                 }
             },
