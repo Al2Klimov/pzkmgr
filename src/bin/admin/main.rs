@@ -1,6 +1,7 @@
 mod hex_fmt;
 mod import_memopzk;
 mod import_vcard;
+mod nullint_fmt;
 mod util;
 
 use cgi::http::{Method, header};

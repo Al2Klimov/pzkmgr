@@ -9,6 +9,7 @@ authors = ["Alexander A. Klimov <a@kli.mov>"]
 [dependencies]
 cgi = "0.8.0"
 csv = "1.4.0"
+regex-lite = "0.1.8"
 sqlite = "0.37.0"
 
 [dependencies.ical]
