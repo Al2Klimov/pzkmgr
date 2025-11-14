@@ -1,0 +1,24 @@
+[package]
+name = "pzkmgr"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.86.0"
+license = "AGPL-3.0"
+authors = ["Alexander A. Klimov <a@kli.mov>"]
+
+[dependencies]
+cgi = "0.8.0"
+csv = "1.4.0"
+html = "0.6.3"
+regex-lite = "0.1.8"
+sqlite = "0.37.0"
+
+[dependencies.ical]
+version = "0.11.0"
+default-features = false
+features = ["vcard", "generator"]
+
+[dependencies.multipart]
+version = "0.18.0"
+default-features = false
+features = ["server"]
