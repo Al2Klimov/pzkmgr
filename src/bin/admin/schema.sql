@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS person (
     birth_year INTEGER,
     birth_month INTEGER,
     birth_day INTEGER,
+    url TEXT,
     CHECK (birth_year BETWEEN 1000 AND 9999),
     CHECK (birth_month BETWEEN 1 AND 12),
     CHECK (birth_day BETWEEN 1 AND 31)

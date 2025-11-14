@@ -65,6 +65,7 @@ fn handler(_: Request) -> Response {
         let mut vc = VcardContact::new();
 
         let name = read_col!(row, "name", &str);
+        let url = read_col!(row, "url", Option<&str>);
         let birth_year = read_col!(row, "birth_year", Option<i64>);
         let birth_month = read_col!(row, "birth_month", Option<i64>);
         let birth_day = read_col!(row, "birth_day", Option<i64>);
@@ -93,6 +94,17 @@ fn handler(_: Request) -> Response {
                 });
             }
             _ => {}
+        }
+
+        match url {
+            None => {}
+            Some(uri) => {
+                vc.add_property(Property {
+                    name: "URL".to_string(),
+                    params: None,
+                    value: Some(uri.to_string()),
+                });
+            }
         }
 
         body.append(vc.generate().into_bytes().by_ref());

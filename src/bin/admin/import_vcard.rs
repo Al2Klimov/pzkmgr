@@ -61,6 +61,17 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
                         },
                     }
 
+                    match contact_prop(&mut vcard, "URL") {
+                        None => {}
+                        Some(url) => http500_unless!(
+                            "Failed to UPDATE person",
+                            db.execute(format!(
+                                "UPDATE person SET url = CAST(unhex('{}') AS TEXT) WHERE name = CAST(unhex('{}') AS TEXT)",
+                                HexFmt::new(url.as_bytes()), hex_name
+                            ))
+                        ),
+                    }
+
                     http500_unless!(
                         "Failed to INSERT INTO pzk",
                         db.execute(format!(
