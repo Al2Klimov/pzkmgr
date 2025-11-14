@@ -1,6 +1,7 @@
 #![recursion_limit = "512"]
 
 mod change_birthday;
+mod change_url;
 mod hex_fmt;
 mod import_memopzk;
 mod import_vcard;
@@ -84,6 +85,10 @@ fn handler(req: Request) -> Response {
         },
         Some("change-birthday") => match req.method() {
             &Method::POST => change_birthday::handler(db, req),
+            _ => text_response(405, "Request method must be POST.\r\n"),
+        },
+        Some("change-url") => match req.method() {
+            &Method::POST => change_url::handler(db, req),
             _ => text_response(405, "Request method must be POST.\r\n"),
         },
         Some(_) => text_response(404, "No such action.\r\n"),

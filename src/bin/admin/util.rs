@@ -4,6 +4,18 @@ use sqlite::Connection;
 use std::io::Cursor;
 
 #[macro_export]
+macro_rules! http400_unless {
+    ($errmsg:expr, $result:expr) => {
+        match $result {
+            Ok(v) => v,
+            Err(err) => {
+                return text_response(400, format!("{}: {}\r\n", $errmsg, err));
+            }
+        }
+    };
+}
+
+#[macro_export]
 macro_rules! http500_unless {
     ($errmsg:expr, $result:expr) => {
         match $result {
