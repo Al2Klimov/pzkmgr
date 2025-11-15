@@ -23,7 +23,7 @@ pub(crate) fn handler(db: Connection, req: Request) -> Response {
     http500_unless!(
         "Failed to UPDATE person",
         db.execute(format!(
-            "UPDATE person SET url = {} WHERE id = unhex('{}')",
+            "UPDATE person SET url = {} WHERE id = CAST(unhex('{}') AS INTEGER)",
             match formdata.remove("url") {
                 None => "NULL".to_string(),
                 Some(url) => format!("CAST(unhex('{}') AS TEXT)", HexFmt::new(url.as_bytes())),
