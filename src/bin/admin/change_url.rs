@@ -32,5 +32,9 @@ pub(crate) fn handler(db: Connection, req: Request) -> Response {
         ))
     );
 
+    if db.change_count() < 1 {
+        return text_response(404, "No such entry.\r\n");
+    }
+
     text_response(200, "Success.\r\n")
 }
