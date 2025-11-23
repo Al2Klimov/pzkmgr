@@ -1,5 +1,7 @@
+use crate::nullint_fmt::NullIntFmt;
 use cgi::{Request, Response, http::header, text_response};
 use multipart::server::{Multipart, MultipartData};
+use regex_lite::Captures;
 use sqlite::Connection;
 use std::io::Cursor;
 
@@ -25,6 +27,20 @@ macro_rules! http500_unless {
             }
         }
     };
+}
+
+pub(crate) fn parse_nullint<'a>(cap: &Captures<'a>, i: usize) -> NullIntFmt {
+    NullIntFmt::new(
+        match cap.get(i) {
+            None => None,
+            Some(m) => match m.as_str().parse::<i64>() {
+                Err(_) => None,
+                Ok(x) => Some(x),
+            },
+        },
+        None,
+        "NULL",
+    )
 }
 
 pub(crate) type UploadedFile<'a> = MultipartData<&'a mut Multipart<Cursor<Vec<u8>>>>;

@@ -1,7 +1,11 @@
-use crate::{hex_fmt::HexFmt, http500_unless, nullint_fmt::NullIntFmt, util::UploadedFile};
+use crate::{
+    hex_fmt::HexFmt,
+    http500_unless,
+    util::{UploadedFile, parse_nullint},
+};
 use cgi::{Response, text_response};
 use ical::{VcardParser, parser::Component};
-use regex_lite::{Captures, Regex};
+use regex_lite::Regex;
 use sqlite::Connection;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -54,7 +58,7 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
                                     "Failed to UPDATE person",
                                     db.execute(format!(
                                         "UPDATE person SET birth_year = {}, birth_month = {}, birth_day = {} WHERE name = CAST(unhex('{}') AS TEXT)",
-                                        parse(&cap, 1), parse(&cap, 2), parse(&cap, 3), hex_name
+                                        parse_nullint(&cap, 1), parse_nullint(&cap, 2), parse_nullint(&cap, 3), hex_name
                                     ))
                                 );
                             }
@@ -94,17 +98,4 @@ fn contact_prop(contact: &mut impl Component, prop: &'static str) -> Option<Stri
         None => None,
         Some(val) => val.value.take(),
     }
-}
-
-fn parse<'a>(cap: &Captures<'a>, i: usize) -> NullIntFmt {
-    NullIntFmt::new(
-        match cap.get(i) {
-            None => None,
-            Some(m) => match m.as_str().parse::<i64>() {
-                Err(_) => None,
-                Ok(x) => Some(x),
-            },
-        },
-        "NULL",
-    )
 }

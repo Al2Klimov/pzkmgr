@@ -1,6 +1,6 @@
-use crate::http500_unless;
+use crate::{http500_unless, nullint_fmt::NullIntFmt};
 use cgi::{Request, Response, html_response, text_response};
-use html::{forms::builders::FormBuilder, root::Html, tables::Table};
+use html::{root::Html, tables::Table};
 use sqlite::Connection;
 
 pub(crate) fn handler(db: Connection, _: Request) -> Response {
@@ -42,13 +42,21 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
                         form.target("_blank")
                             .action("?change-birthday")
                             .method("POST")
-                            .input(|input| input.name("id").type_("hidden").value(id.clone()));
-
-                        number_input(form, "year", "1000", "9999", birth_year);
-                        number_input(form, "month", "1", "12", birth_month);
-                        number_input(form, "day", "1", "31", birth_day);
-
-                        form.input(|input| input.type_("submit").value("Save"))
+                            .enctype("text/plain")
+                            .input(|input| input.name("id").type_("hidden").value(id.clone()))
+                            .input(|input| {
+                                input
+                                    .name("birthday")
+                                    .type_("text")
+                                    .size("10")
+                                    .value(format!(
+                                        "{}.{}.{}",
+                                        NullIntFmt::new(birth_day, Some(2), "--"),
+                                        NullIntFmt::new(birth_month, Some(2), "--"),
+                                        NullIntFmt::new(birth_year, Some(4), "----")
+                                    ))
+                            })
+                            .input(|input| input.type_("submit").value("Save"))
                     })
                 })
                 .table_cell(|td| {
@@ -88,25 +96,4 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
             .build()
             .to_string(),
     )
-}
-
-fn number_input(
-    form: &mut FormBuilder,
-    name: &'static str,
-    min: &'static str,
-    max: &'static str,
-    value: Option<i64>,
-) {
-    form.input(|input| {
-        input.name(name).type_("number").min(min).max(max);
-
-        match value {
-            None => {}
-            Some(v) => {
-                input.value(v.to_string());
-            }
-        }
-
-        input
-    });
 }
