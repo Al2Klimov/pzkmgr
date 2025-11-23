@@ -17,8 +17,7 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
 
     table.table_row(|tr| {
         tr.table_header(|th| th.text("Name"))
-            .table_header(|th| th.text("Birthday"))
-            .table_header(|th| th.text("URL"))
+            .table_header(|th| th.text("Birthday, URL"))
     });
 
     let query = http500_unless!(
@@ -36,51 +35,40 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
         let birth_day = read_col!(row, "birth_day", Option<i64>);
 
         table.table_row(|tr| {
-            tr.table_cell(|td| td.text(name))
-                .table_cell(|td| {
-                    td.form(|form| {
-                        form.target("_blank")
-                            .action("?change-birthday")
-                            .method("POST")
-                            .enctype("text/plain")
-                            .input(|input| input.name("id").type_("hidden").value(id.clone()))
-                            .input(|input| {
-                                input
-                                    .name("birthday")
-                                    .type_("text")
-                                    .size("10")
-                                    .value(format!(
-                                        "{}.{}.{}",
-                                        NullIntFmt::new(birth_day, Some(2), "--"),
-                                        NullIntFmt::new(birth_month, Some(2), "--"),
-                                        NullIntFmt::new(birth_year, Some(4), "----")
-                                    ))
-                            })
-                            .input(|input| input.type_("submit").value("Save"))
-                    })
-                })
-                .table_cell(|td| {
-                    td.form(|form| {
-                        form.target("_blank")
-                            .action("?change-url")
-                            .method("POST")
-                            .enctype("text/plain")
-                            .input(|input| input.name("id").type_("hidden").value(id))
-                            .input(|input| {
-                                input.name("url").type_("text");
+            tr.table_cell(|td| td.text(name)).table_cell(|td| {
+                td.form(|form| {
+                    form.target("_blank")
+                        .action("?update-person")
+                        .method("POST")
+                        .enctype("text/plain")
+                        .input(|input| input.name("id").type_("hidden").value(id.clone()))
+                        .input(|input| {
+                            input
+                                .name("birthday")
+                                .type_("text")
+                                .size("10")
+                                .value(format!(
+                                    "{}.{}.{}",
+                                    NullIntFmt::new(birth_day, Some(2), "--"),
+                                    NullIntFmt::new(birth_month, Some(2), "--"),
+                                    NullIntFmt::new(birth_year, Some(4), "----")
+                                ))
+                        })
+                        .input(|input| {
+                            input.name("url").type_("text");
 
-                                match url {
-                                    None => {}
-                                    Some(uri) => {
-                                        input.value(uri);
-                                    }
+                            match url {
+                                None => {}
+                                Some(uri) => {
+                                    input.value(uri);
                                 }
+                            }
 
-                                input
-                            })
-                            .input(|input| input.type_("submit").value("Save"))
-                    })
+                            input
+                        })
+                        .input(|input| input.type_("submit").value("Save"))
                 })
+            })
         });
     }
 

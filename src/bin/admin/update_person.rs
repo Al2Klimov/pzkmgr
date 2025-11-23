@@ -1,5 +1,8 @@
-use crate::{hex_fmt::HexFmt, http400_unless, http500_unless};
+use crate::{
+    hex_fmt::HexFmt, http400_unless, http500_unless, nullint_fmt::NullIntFmt, util::parse_nullint,
+};
 use cgi::{Request, Response, text_response};
+use regex_lite::Regex;
 use sqlite::Connection;
 use std::collections::HashMap;
 
@@ -20,10 +23,37 @@ pub(crate) fn handler(db: Connection, req: Request) -> Response {
         }
     }
 
+    let mut dd = NullIntFmt::new(None, None, "NULL");
+    let mut mm = dd.clone();
+    let mut yyyy = dd.clone();
+
+    match formdata.remove("birthday") {
+        None => {}
+        Some(birthday) => {
+            let ddmmyyyy =
+                Regex::new(r"\A([0-9]{1,2}|-*)\.([0-9]{1,2}|-*)\.([0-9]{4}|-*)\z").unwrap();
+
+            match ddmmyyyy.captures(birthday) {
+                None => {
+                    return text_response(
+                        400,
+                        format!("Birthday is not like this: {}\r\n", ddmmyyyy),
+                    );
+                }
+                Some(caps) => {
+                    dd = parse_nullint(&caps, 1);
+                    mm = parse_nullint(&caps, 2);
+                    yyyy = parse_nullint(&caps, 3);
+                }
+            }
+        }
+    }
+
     http500_unless!(
         "Failed to UPDATE person",
         db.execute(format!(
-            "UPDATE person SET url = {} WHERE id = CAST(unhex('{}') AS INTEGER)",
+            "UPDATE person SET birth_day = {}, birth_month = {}, birth_year = {}, url = {} WHERE id = CAST(unhex('{}') AS INTEGER)",
+            dd, mm, yyyy,
             match formdata.remove("url") {
                 None => "NULL".to_string(),
                 Some(url) => format!("CAST(unhex('{}') AS TEXT)", HexFmt::new(url.as_bytes())),

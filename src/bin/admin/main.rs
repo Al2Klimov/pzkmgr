@@ -1,12 +1,11 @@
 #![recursion_limit = "512"]
 
-mod change_birthday;
-mod change_url;
 mod hex_fmt;
 mod import_memopzk;
 mod import_vcard;
 mod list_current;
 mod nullint_fmt;
+mod update_person;
 mod util;
 
 use cgi::http::{Method, header};
@@ -83,12 +82,8 @@ fn handler(req: Request) -> Response {
             &Method::GET => list_current::handler(db, req),
             _ => text_response(405, "Request method must be GET.\r\n"),
         },
-        Some("change-birthday") => match req.method() {
-            &Method::POST => change_birthday::handler(db, req),
-            _ => text_response(405, "Request method must be POST.\r\n"),
-        },
-        Some("change-url") => match req.method() {
-            &Method::POST => change_url::handler(db, req),
+        Some("update-person") => match req.method() {
+            &Method::POST => update_person::handler(db, req),
             _ => text_response(405, "Request method must be POST.\r\n"),
         },
         Some(_) => text_response(404, "No such action.\r\n"),
