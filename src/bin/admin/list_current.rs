@@ -17,7 +17,7 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
 
     table.table_row(|tr| {
         tr.table_header(|th| th.text("Name"))
-            .table_header(|th| th.text("Birthday, URL"))
+            .table_header(|th| th.text("URL, Birthday"))
     });
 
     let query = http500_unless!(
@@ -43,18 +43,6 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
                         .enctype("text/plain")
                         .input(|input| input.name("id").type_("hidden").value(id.clone()))
                         .input(|input| {
-                            input
-                                .name("birthday")
-                                .type_("text")
-                                .size("10")
-                                .value(format!(
-                                    "{}.{}.{}",
-                                    NullIntFmt::new(birth_day, Some(2), "--"),
-                                    NullIntFmt::new(birth_month, Some(2), "--"),
-                                    NullIntFmt::new(birth_year, Some(4), "----")
-                                ))
-                        })
-                        .input(|input| {
                             input.name("url").type_("text");
 
                             match url {
@@ -65,6 +53,18 @@ pub(crate) fn handler(db: Connection, _: Request) -> Response {
                             }
 
                             input
+                        })
+                        .input(|input| {
+                            input
+                                .name("birthday")
+                                .type_("text")
+                                .size("10")
+                                .value(format!(
+                                    "{}.{}.{}",
+                                    NullIntFmt::new(birth_day, Some(2), "--"),
+                                    NullIntFmt::new(birth_month, Some(2), "--"),
+                                    NullIntFmt::new(birth_year, Some(4), "----")
+                                ))
                         })
                         .input(|input| input.type_("submit").value("Save"))
                 })
