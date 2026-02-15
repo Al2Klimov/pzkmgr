@@ -24,8 +24,8 @@ jobs:
       fail-fast: false
       matrix:
         rust:
-          # NixOS 25.05
-          - 1.86.0
+          # NixOS 25.11
+          - 1.91.1
 
         os:
           - ubuntu-latest
