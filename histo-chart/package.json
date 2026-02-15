@@ -1,0 +1,12 @@
+{
+  "name": "histo-chart",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browser chart displaying people over time from fetched CSV data",
+  "dependencies": {
+    "chart.js": "^4.4.8"
+  },
+  "scripts": {
+    "postinstall": "mkdir -p lib && cp node_modules/chart.js/dist/chart.umd.js lib/"
+  }
+}

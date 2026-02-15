@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>People Over Time</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #0f172a; }
+    #chart-container {
+      width: 100%;
+      height: 100%;
+      padding: 24px;
+    }
+    #error {
+      display: none;
+      color: #f87171;
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      padding-top: 40vh;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="chart-container">
+    <canvas id="chart"></canvas>
+  </div>
+  <div id="error"></div>
+
+  <script src="lib/chart.umd.js"></script>
+  <script>
+    (async function () {
+      const errorEl = document.getElementById('error');
+      const container = document.getElementById('chart-container');
+
+      try {
+        const resp = await fetch('https://cal.al2klimov.de/chart-data');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const csv = await resp.text();
+
+        const lines = csv.trim().split('\n');
+        lines.shift();
+        const data = lines.map(function (line) {
+          const parts = line.split(',');
+          return {
+            time: new Date(Number(parts[0]) * 1000),
+            people: Number(parts[1])
+          };
+        });
+
+        const labels = data.map(function (d) {
+          return d.time.toLocaleDateString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric'
+          });
+        });
+        const values = data.map(function (d) { return d.people; });
+
+        const ctx = document.getElementById('chart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, ctx.canvas.clientHeight);
+        gradient.addColorStop(0, 'rgba(56, 189, 248, 0.4)');
+        gradient.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'People',
+              data: values,
+              borderColor: '#38bdf8',
+              backgroundColor: gradient,
+              borderWidth: 2.5,
+              pointBackgroundColor: '#38bdf8',
+              pointBorderColor: '#0f172a',
+              pointBorderWidth: 2,
+              pointRadius: 5,
+              pointHoverRadius: 8,
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: '#e2e8f0', font: { size: 14 } }
+              },
+              tooltip: {
+                backgroundColor: '#1e293b',
+                titleColor: '#e2e8f0',
+                bodyColor: '#94a3b8',
+                borderColor: '#334155',
+                borderWidth: 1,
+                padding: 12,
+                displayColors: false,
+                callbacks: {
+                  title: function (items) {
+                    var idx = items[0].dataIndex;
+                    return data[idx].time.toLocaleString(undefined, {
+                      year: 'numeric', month: 'short', day: 'numeric',
+                      hour: '2-digit', minute: '2-digit'
+                    });
+                  },
+                  label: function (item) {
+                    return 'People: ' + item.formattedValue;
+                  }
+                }
+              }
+            },
+            scales: {
+              x: {
+                title: { display: true, text: 'Time', color: '#94a3b8', font: { size: 13 } },
+                ticks: { color: '#94a3b8', maxRotation: 45, autoSkip: true },
+                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+              },
+              y: {
+                title: { display: true, text: 'People', color: '#94a3b8', font: { size: 13 } },
+                ticks: { color: '#94a3b8' },
+                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+              }
+            }
+          }
+        });
+      } catch (err) {
+        container.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorEl.textContent = 'Failed to load chart data: ' + err.message;
+      }
+    })();
+  </script>
+</body>
+</html>
