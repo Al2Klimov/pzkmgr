@@ -34,16 +34,48 @@ pub(crate) fn handler(db: Connection, req: Request) -> Response {
                 Regex::new(r"\A([0-9]{1,2}|-*)\.([0-9]{1,2}|-*)\.([0-9]{4}|-*)\z").unwrap();
 
             match ddmmyyyy.captures(birthday) {
-                None => {
-                    return text_response(
-                        400,
-                        format!("Birthday is not like this: {}\r\n", ddmmyyyy),
-                    );
-                }
                 Some(caps) => {
                     dd = parse_nullint(&caps, 1);
                     mm = parse_nullint(&caps, 2);
                     yyyy = parse_nullint(&caps, 3);
+                }
+                None => {
+                    let dd_month_yyyy = Regex::new(
+                        r"\A([0-9]{1,2}|-*) (января|февраля|марта|апреля|мая|июня|июля|августа|сентября|октября|ноября|декабря) ([0-9]{4}|-*)\z",
+                    )
+                    .unwrap();
+
+                    match dd_month_yyyy.captures(birthday) {
+                        None => {
+                            return text_response(
+                                400,
+                                format!("Birthday is not like this: {}\r\n", ddmmyyyy),
+                            );
+                        }
+                        Some(caps) => {
+                            dd = parse_nullint(&caps, 1);
+                            mm = NullIntFmt::new(
+                                Some(match caps.get(2).unwrap().as_str() {
+                                    "января" => 1,
+                                    "февраля" => 2,
+                                    "марта" => 3,
+                                    "апреля" => 4,
+                                    "мая" => 5,
+                                    "июня" => 6,
+                                    "июля" => 7,
+                                    "августа" => 8,
+                                    "сентября" => 9,
+                                    "октября" => 10,
+                                    "ноября" => 11,
+                                    "декабря" => 12,
+                                    _ => unreachable!(),
+                                }),
+                                None,
+                                "NULL",
+                            );
+                            yyyy = parse_nullint(&caps, 3);
+                        }
+                    }
                 }
             }
         }
