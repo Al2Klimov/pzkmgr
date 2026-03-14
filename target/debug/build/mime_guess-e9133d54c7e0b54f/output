@@ -1,1 +1,0 @@
-cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/home/runner/work/pzkmgr/pzkmgr/target/debug/build/mime_guess-e9133d54c7e0b54f/out/mime_types_generated.rs
