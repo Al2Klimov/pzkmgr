@@ -83,7 +83,7 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
                             http500_unless!(
                                 "Failed to UPDATE person",
                                 db.execute(format!(
-                                    "UPDATE person SET birth_day = {}, birth_month = {}, birth_year = {} WHERE name = CAST(unhex('{}') AS TEXT) AND birth_year IS NULL AND birth_month IS NULL AND birth_day IS NULL",
+                                    "UPDATE person SET birth_day = {}, birth_month = {}, birth_year = {} WHERE name = CAST(unhex('{}') AS TEXT)",
                                     d, m, y, hex_name
                                 ))
                             );
