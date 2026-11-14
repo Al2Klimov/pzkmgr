@@ -76,7 +76,7 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
                         http500_unless!(
                             "Failed to UPDATE person",
                             db.execute(format!(
-                                "UPDATE person SET address = CAST(unhex('{}') AS TEXT) WHERE name = CAST(unhex('{}') AS TEXT) AND address IS NULL",
+                                "UPDATE person SET address = CAST(unhex('{}') AS TEXT) WHERE name = CAST(unhex('{}') AS TEXT)",
                                 HexFmt::new(address.as_bytes()),
                                 hex_name
                             ))
