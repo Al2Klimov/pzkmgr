@@ -1,6 +1,7 @@
 #![recursion_limit = "512"]
 
 mod hex_fmt;
+mod import_airtable;
 mod import_memopzk;
 mod import_vcard;
 mod list_current;
@@ -67,6 +68,11 @@ fn handler(req: Request) -> Response {
         None => match req.method() {
             &Method::GET => html_response(200, include_str!("index.html")),
             _ => text_response(405, "Request method must be GET.\r\n"),
+        },
+        Some("import-airtable") => match req.method() {
+            &Method::GET => html_response(200, include_str!("import-airtable.html")),
+            &Method::POST => util::handle_upload(db, req, import_airtable::handler),
+            _ => text_response(405, "Request method must be GET or POST.\r\n"),
         },
         Some("import-memopzk") => match req.method() {
             &Method::GET => html_response(200, include_str!("import-memopzk.html")),
