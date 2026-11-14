@@ -37,6 +37,8 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
         _ => return text_response(400, "Invalid CSV: missing required columns\r\n"),
     };
 
+    let address_col = col("Адрес для писем");
+
     for i in reader.records() {
         match i {
             Err(err) => return text_response(400, format!("Invalid CSV: {}\r\n", err)),
@@ -61,6 +63,21 @@ pub(crate) fn handler(db: Connection, file: UploadedFile) -> Response {
                             db.execute(format!(
                                 "UPDATE person SET url = CAST(unhex('{}') AS TEXT) WHERE name = CAST(unhex('{}') AS TEXT) AND url IS NULL",
                                 HexFmt::new(url.as_bytes()),
+                                hex_name
+                            ))
+                        );
+                    }
+
+                    let address = address_col
+                        .and_then(|c| row.get(c))
+                        .map(str::trim)
+                        .unwrap_or("");
+                    if !address.is_empty() {
+                        http500_unless!(
+                            "Failed to UPDATE person",
+                            db.execute(format!(
+                                "UPDATE person SET address = CAST(unhex('{}') AS TEXT) WHERE name = CAST(unhex('{}') AS TEXT) AND address IS NULL",
+                                HexFmt::new(address.as_bytes()),
                                 hex_name
                             ))
                         );
