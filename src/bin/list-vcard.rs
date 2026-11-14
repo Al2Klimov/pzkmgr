@@ -66,6 +66,7 @@ fn handler(_: Request) -> Response {
 
         let name = read_col!(row, "name", &str);
         let url = read_col!(row, "url", Option<&str>);
+        let address = read_col!(row, "address", Option<&str>);
         let birth_year = read_col!(row, "birth_year", Option<i64>);
         let birth_month = read_col!(row, "birth_month", Option<i64>);
         let birth_day = read_col!(row, "birth_day", Option<i64>);
@@ -103,6 +104,17 @@ fn handler(_: Request) -> Response {
                     name: "URL".to_string(),
                     params: None,
                     value: Some(uri.to_string()),
+                });
+            }
+        }
+
+        match address {
+            None => {}
+            Some(address) => {
+                vc.add_property(Property {
+                    name: "LABEL".to_string(),
+                    params: None,
+                    value: Some(address.replace("\r\n", " ").replace(['\r', '\n'], " ")),
                 });
             }
         }
