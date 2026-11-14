@@ -114,7 +114,7 @@ fn handler(_: Request) -> Response {
                 vc.add_property(Property {
                     name: "LABEL".to_string(),
                     params: None,
-                    value: Some(address.to_string()),
+                    value: Some(address.replace("\r\n", " ").replace(['\r', '\n'], " ")),
                 });
             }
         }
